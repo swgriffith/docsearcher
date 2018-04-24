@@ -1,96 +1,586 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="icon" href="../favicon.ico">
 
-    <title>Azure Search Recommendations Demo</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+          crossorigin="anonymous">
 
-    <!-- Bootstrap core CSS -->
-    <link href="/Content/bootstrap.min.css" rel="stylesheet">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+          crossorigin="anonymous">
 
-    <!-- Custom styles for this template -->
-    <link href="/Content/Site.css" rel="stylesheet">
+    <!--link rel="stylesheet" href="https://cdn.jsdelivr.net/azsearch.js/0.0.13/AzSearch.css"-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/azsearch.js@0.0.21/dist/AzSearch.css">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
+    <!-- hocr Proofreader -->
+    <link rel="stylesheet" href="/Content/fonts.css" />
+    <link rel="stylesheet" href="/Content/main.css" />
+    <link rel="stylesheet" href="/Content/tooltipster.bundle.css" />
+    <link rel="stylesheet" href="/Content/tooltipster-sideTip-light.min.css" />
+    <link rel="stylesheet" href="/Content/tooltipster-sideTip-noir.min.css" />
+    <link rel="stylesheet" href="/Content/tooltipster-sideTip-shadow.min.css" />
+    <script src="/Scripts/hocr-proofreader.js"></script>
+    <script src="/Scripts/main.js"></script>
+
+    <script src="//d3js.org/d3.v3.min.js"></script>
+    <script type="text/javascript">
+        //app insights?
+    </script>
 
 
-
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
+    <title>Document Analyzer</title>
 </head>
 
 <body>
 
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="#">Documentation Search</a>
-            </div>
-            <div id="navbar" class="collapse navbar-collapse">
-                <ul class="nav navbar-nav">
-                    <li class="active"><a href="#">Home</a></li>
-                </ul>
-            </div><!--/.nav-collapse -->
-        </div>
-    </nav>
+    <style>
+        div.stretchy-wrapper {
+            width: 100%;
+            position: relative;
+        }
 
-    <div class="container">
+            div.stretchy-wrapper > div {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+            }
 
-        <h3>This is a demo that leverages </h3>
-        <div class="row">
-            <div class="input-group" style="padding:20px;">
-                <input type="text" class="form-control" placeholder="What do you want to search for" id="q" oninput="execSuggest();">
-                <span class="input-group-btn">
-                    <button class="btn btn-default" type="button" onclick="execSuggest();">Go!</button>
-                </span>
-            </div><!-- /input-group -->
-        </div>
-        <div class="row">
-            <div id="mediaContainer"></div>
-        </div>
-    </div><!-- /.container -->
+        .highlight {
+            opacity: 0.5;
+            filter: alpha(opacity=30);
+            background-color: yellow;
+        }
+
+        #photoInput {
+            display: none;
+            z-index: 99999999;
+        }
+
+        .fa-camera {
+            color: white;
+            position: absolute;
+            top: 4px;
+            font-size: 24px;
+        }
+
+        .list-group-item {
+            padding: 3px;
+        }
+
+        .nav-sidebar {
+            font-size: 9pt;
+        }
+    </style>
+
     <!-- Modal -->
-    <div id="myModal" class="modal fade" role="dialog">
-        <div class="modal-dialog">
-
-            <!-- Modal content-->
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title" id="modal-title"></h4>
-                </div>
-                <div class="modal-body">
-                    <H4>Doc Info</H4>
-                    <div id="recDiv">
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" style="width: 98%; height: 95%;" role="document">
+            <div class="modal-content" style="height: 100%;">
+                <div class="modal-body" style="width: 100%; height: 100%;">
+                    <div class="toolbar">
+                        <button id="toggle-layout-image">Image/Text</button>
+                        <div class="separator"></div>
+                        <span>Zoom:</span>
+                        <button id="zoom-page-full">Full Page</button>
+                        <button id="zoom-page-width">Page Width</button>
+                        <button id="zoom-original">Original</button>
+                        <button id="download-original">Download</button>
+                        <div class="separator"></div>
+                        <button id="button-save">Save</button>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <div id="layout-container" class="container" style="width: 50%;"></div>
+                    <div id="editor-container" class="container" style="width: 50%;"></div>
                 </div>
             </div>
-
         </div>
     </div>
 
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-    <script src="/Scripts/bootstrap.min.js"></script>
-   
-    <script src="/Scripts/search.js"></script>
+    <div id="app">
+        <nav class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#facetPanel" aria-expanded="false"
+                            aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <div class="row">
+                        <div>
+                            <a href="https://aka.ms/jfkfiles" style="float: left; padding: 5px;">
+                                <img src="/Content/jfk-files.png" style="max-height: 40px;">
+                            </a>
+                        </div>
+                        <div id="searchBox" class="col-mid-8 col-sm-8 col-xs-6"></div>
+                        <div class="pagelabel">
+                            <a class="navbar-brand pagelabel" href="https://aka.ms/jfkfiles" style="margin-left: 10px; padding-top: 8px; margin-right: 10px;">learn more</a>
+                            <form class="navbar-form" role="search">
+                                <span class="input-group-btn">
+                                    <button class="searchBox__button btn" type="button" style="height:32px; padding:0px;border-radius: 3px;" onclick="toggleGraph()">
+                                        <img src="/Content/graph.png" style="height:100%;" />
+                                    </button>
+                                </span>
+                            </form>
+                        </div>
+                        <div id="navbar" class="navbar-collapse collapse">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <div class="container-fluid">
+            <div class="row">
+
+                <div id="facetPanel" class="col-sm-3 col-md-3 sidebar collapse">
+                    <ul class="nav nav-sidebar">
+                        <div className="panel panel-primary behclick-panel">
+                            <div id="entitiesFacet"></div>
+                        </div>
+                    </ul>
+                </div>
+
+                <div class="col-sm-9 col-sm-offset-3 col-md-9 col-md-offset-3 results_section">
+                    <div id="fdGraph" style="display:none; border-bottom:1px solid #eee; height: 1000px; width:100%; margin-left: -20px;background: #f5f5f5; overflow: hidden; position: fixed; z-index: 1000"></div>
+                    <div id="results" class="row placeholders" style="max-width: 900px; margin-left: auto; margin-right: auto;">
+                    </div>
+                    <div id="pager" class="row">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Bootstrap core JavaScript
+            ================================================== -->
+        <!-- Placed at the end of the document so the pages load faster -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+                crossorigin="anonymous"></script>
+
+        <script src="/Scripts/tooltipster.bundle.js"></script>
+    </div>
+
+    <!-- Dependencies -->
+    <script src="https://cdn.jsdelivr.net/react/15.5.0/react.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/react/15.5.0/react-dom.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/redux/3.6.0/redux.min.js"></script>
+    <!-- Main -->
+    <!--script src="https://cdn.jsdelivr.net/azsearch.js/0.0.13/AzSearch.bundle.js"></script-->
+    <script src="https://cdn.jsdelivr.net/npm/azsearch.js@0.0.21/dist/AzSearch.bundle.js"></script>
+    <script>
+
+    var lastResults;
+
+    var graphVisible = false;
+
+    String.prototype.replaceAll = function (search, replacement) {
+        var target = this;
+        return target.replace(new RegExp(search, 'g'), replacement);
+    };
+
+    Array.prototype.flatMap = function (lambda) {
+        return Array.prototype.concat.apply([], this.map(lambda));
+    };
+
+
+    function toggleGraph()
+    {
+        setGraphVisible(!graphVisible)
+    }
+
+    function setGraphVisible(visible) {
+        if (!graphVisible && automagic.store.getState().results.count > 0
+            && automagic.store.getState().parameters.input != graphQuery)
+
+            getFDNodes(automagic.store.getState().parameters.input);
+
+        graphVisible = visible;
+        if (graphVisible)
+            $("#fdGraph").show();
+        else
+            $("#fdGraph").hide()
+    }
+
+        function highlight(orig, text) {
+            text = escapeRegExp(text);
+            orig = orig.replaceAll(text, '<span class="highlight" style="background-color: #FFFF00">'+text+'</span>' );
+            return orig;
+        }
+
+        function escapeRegExp(str) {
+            return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+        }
+
+
+    function showDocument(index)
+    {
+        var regex = /(<([^>]+)>)/ig;
+
+        result = lastResults[index];
+
+         var highlights = $.unique(
+                result['@@search.highlights'].text
+                 .flatMap(function (t) { return t.replace(regex, "") })
+                .map(function (t) { return t; })
+            );
+
+          //result.text = escapeRegExp(result.text);
+          for (var h in highlights) {
+              
+              var high = highlights[h]
+              if (typeof (high) !== 'string') {
+                  continue;
+              }
+              result.text = highlight(result.text, high);
+         }
+
+          result.text = result.text.replace(/\n/g, "<br />");
+
+        // For some reason on the Edge browser the cached current page causes a security exception so we make sure it is null
+        hocrProofreader.currentPage = null;
+
+
+
+        //hocrProofreader.setHocr(result.metadata, "", result.pageNum, result.keywords);
+        hocrProofreader.setHocr(result.text, "", 1, result.entities);
+        hocrProofreader.setZoom('page-full');
+
+        $('#download-original').click(function () {
+            window.location = "https://jdhfiles.blob.core.windows.net/pdf/" + result.id;
+        });
+        $('#myModal').modal('show');
+
+        // there is an issue with this UI in a model dialog where it wont scroll into view until after its made visible
+        
+            $('#myModal').one('shown.bs.modal', function () {
+                //document.getElementsByTagName('h2')[3].scrollIntoView();
+                hocrProofreader.editorIframe.contentDocument.body.getElementsByClassName('highlight')[0].scrollIntoView({ behavior: "instant", block: "start" });
+            });
+
+    }
+
+    function getHocrMetadata(element)
+    {
+        var meta = {};
+        meta.text = element.innerText;
+        $(element).attr("title").split(";").map(function (e) { return e.trim(); }).forEach(function(e) {
+            var sections = e.split(" ")
+            var vals = [];
+            for (var i=1; i<sections.length; i++)
+            {
+                if (sections[i].substring(0,1) == '"' || sections[i].substring(0,1) == "'")
+                    vals.push(sections[i].substring(1, sections[i].length - 1));
+                else
+                    vals.push(Number(sections[i]));
+            }
+
+            meta[sections[0]] = vals.length == 1 ? vals[0] : vals;
+        });
+        return meta;
+    }
+
+    //hack
+    var imageAspectRatio;
+    var aRatio;
+    var firstHighlight;
+    var viewOffset;
+
+
+    function OnSearch(searchState, postBody)
+    {
+        //****appInsights.trackEvent("Search", { "query": postBody.search });
+
+        // add the facets to the search query for highlighting
+        //for (var facet in searchState.facets.facets) {
+        //    var vals = searchState.facets.facets[facet].values;
+        //    for (var fv in vals)
+        //    {
+        //        if (vals[fv].selected && facet == "terms")
+        //            postBody.search += " " + fv;
+        //    }
+        //}
+        notifywiki = true;
+        for (var facet = 0; facet < postBody.facets.length; facet++)
+        {
+            postBody.facets[facet] = postBody.facets[facet].replace("tags,count:5,", "tags,count:20,");
+        }
+
+        //if (graphVisible)
+        getFDNodes(postBody.search);
+
+        return fetch("/api/search",
+            {
+                mode: "cors",
+                headers: {
+                    "api-key": searchState.config.queryKey,
+                    "Content-Type": "application/json"
+                },
+                method: "POST",
+                body: JSON.stringify(postBody)
+            });
+    }
+
+
+    // Initialize and connect to your search service
+    var automagic = new AzSearch.Automagic({});
+    // add a results view using the template defined above
+    automagic.addResults("results", { count: true });
+    // Adds a pager control << 1 2 3 ... >>
+    automagic.addPager("pager");
+
+    automagic.addSearchBox("searchBox");
+
+    automagic.addCheckboxFacet("entitiesFacet", "entities", "collection");
+
+    // get hightlight snippets for text
+    automagic.store.updateSearchParameters({ highlight: "text", top: 10, searchMode: "all" });
+
+    //$("#facetPanel").change(OnSearch);
+    automagic.store.setSearchCallback(OnSearch);
+
+    var resultTemplate =
+       `<div>{{{id}}}: {{{title}}}</div>
+    {{#metadata}}
+       <div style="border: #286090 solid 2px;">
+       <div class="stretchy-wrapper" style="padding-bottom: {{{image.previewAspectRatio}}}%;{{{extraStyles}}}">
+           <div class ="resultDescription" style="border: solid; border-width: 0px; background-image:url('{{{image.url}}}'); background-size:100%; background-position-y:{{{image.topPercent}}}%; overflow: hidden;" onclick="showDocument({{{idx}}})">
+             {{#highlight_words}}
+
+                <div class ="highlight" style="position: absolute; width: {{{widthPercent}}}%; height: {{{heightPercent}}}%; left: {{{leftPercent}}}%; top: {{{topPercent}}}%;" title="{{annotation}}" data-wikipedia="{{wikipediaUrl}}"></div>
+
+             {{/highlight_words}}
+           </div>
+       </div>
+       </div>
+    {{/metadata}}`;
+
+        var resultTemplate1 =
+            `<div class="col-md-4" style="text-align:center"><a href="javascript:void(0);" onclick="showDocument({{{idx}}});"><img src="/Content/pdf_logo.png" height=100><br><div style="height:100px"><b>{{{id}}}</b></a></div></div>`;
+
+    // add a results view, updates parameters to include count, uses the above template
+    automagic.addResults("results", { count: true }, resultTemplate1);
+
+    automagic.store.setInput("");
+
+    var notifywiki = false;
+
+    // add a resultsProcessor to more easily format the results display
+    var resultsProcessor = function (results) {
+        var idx = 0;
+        return lastResults = results.map(function (result) {
+
+            if (notifywiki) {
+                notifywiki = false;
+                window.setTimeout(function () { setupAnnotations(); }, 100);
+            }
+            result.idx = idx;
+            idx++;
+
+            if (!result.metadata) {
+                return result;
+            }
+
+            result.extraStyles = "";
+            var viewAspectRatio = .2;
+
+            if (!result.metadata)
+                return result;
+
+
+            var pages = $(result.metadata).filter(".ocr_page");
+            if(pages.length == 0)
+                return result;
+
+
+            var noHighlights = function (pagenum) {
+                var pageMeta = getHocrMetadata(pages[pagenum | 0]);
+                result.image = {
+                    url: pageMeta.image,
+                    width: pageMeta.bbox[2],
+                    height: pageMeta.bbox[3],
+                    previewAspectRatio: viewAspectRatio * 100,
+                    topPercent: 10,
+                };
+                result.pageNum = pageMeta.ppageno;
+                return result;
+            }
+
+            if (!result['@@search.highlights'])
+                return noHighlights();
+
+            // get all the unique highlight words
+            var highlights = $.unique(
+                result['@@search.highlights'].text
+                .flatMap(function (t) { return t.match(/<em>(.+?)<\/em>/g) })
+                .map(function (t) { return t.substring(4, t.length - 5).toLowerCase(); })
+            );
+            result.keywords = highlights;
+
+
+            // get all the highlighted word metadata
+            var previewPages = pages.map(function (i, page) {
+                return {
+                    metadata: getHocrMetadata(page),
+                    highlightNodes: $("span[class='ocrx_word']", page).filter(function () { return highlights.includes($(this).text().toLowerCase()); }).toArray()
+                };
+            }).toArray();
+
+            var pageIdx = previewPages.findIndex(function (page) { return page.highlightNodes.length > 0; });
+            if (pageIdx == -1)
+                pageIdx = 0;
+            var previewPage = previewPages[pageIdx];
+
+            // override the preview page if set on the index
+            if (result.demoInitialPage && previewPages[result.demoInitialPage].highlightNodes.length > 0)
+                previewPage = previewPages[result.demoInitialPage];
+
+            if (previewPage.highlightNodes.length == 0)
+                return noHighlights(result.demoIntialPage);
+
+            // determine the page to show
+            var pageMeta = previewPage.metadata;
+            result.pageNum = pageMeta.ppageno;
+            result.image = {
+                url: pageMeta.image,
+                width: pageMeta.bbox[2],
+                height: pageMeta.bbox[3],
+                previewAspectRatio: viewAspectRatio * 100
+            };
+
+            // get the highlighted words
+            highlightsToShow = previewPage.highlightNodes
+                .map(function (node) { return getHocrMetadata(node); })
+                .filter(function (meta) { return meta.bbox; })
+                .map(function (keywordMeta) {
+                    return {
+                        left: keywordMeta.bbox[0],
+                        top: keywordMeta.bbox[1],
+                        width: keywordMeta.bbox[2] - keywordMeta.bbox[0],
+                        height: keywordMeta.bbox[3] - keywordMeta.bbox[1],
+                        text: keywordMeta.text
+                    };
+                });
+
+            result.highlightsToShow = highlightsToShow;
+            if (highlightsToShow.length > 0) {
+                // determine the image aspect ratio
+                /*var*/ imageAspectRatio = result.image.height / result.image.width;
+                /*var*/ aRatio = viewAspectRatio / imageAspectRatio;
+
+                // show 2 lines above the highlighted word, but make sure not to offset past top of the document
+                /*var*/ firstHighlight = highlightsToShow[0];
+                /*var*/ viewOffset = firstHighlight.height * 2;
+                if (firstHighlight.top - viewOffset < 0)
+                    viewOffset = -firstHighlight.top;
+
+                viewh = (aRatio * result.image.height);
+
+                result.image.topPercent = (firstHighlight.top - viewOffset) / (result.image.height - viewh) * 100;
+
+                viewt = (result.image.height - viewh) * (result.image.topPercent / 100);
+
+                result.highlight_words = highlightsToShow.map(function (word) {
+                    var highlight_word = {
+                        heightPercent: word.height / result.image.height / aRatio * 100,
+                        //topPercent: viewOffset / (result.image.height - (word.height * aRatio)) / aRatio * 100,
+                        topPercent: ((word.top - viewt) * (100 / viewh)),
+                        widthPercent: word.width / result.image.width * 100,
+                        leftPercent: word.left / result.image.width * 100
+                    }
+
+                    return highlight_word;
+                });
+            }
+            else
+            {
+                // a photo
+                result.image.topPercent = 50;
+                result.image.previewAspectRatio = 40;
+                result.extraStyles = "; max-width: 600px; margin-left: auto; margin-right: auto";
+            }
+
+
+            return result;
+        });
+    };
+    automagic.store.setResultsProcessor(resultsProcessor);
+
+    function setupAnnotations() {
+        $('div.highlight[data-wikipedia!=""]').tooltipster({
+            content: 'Loading data from Wikipedia...',
+            theme: 'tooltipster-shadow',
+            updateAnimation: null,
+            interactive: true,
+            maxWidth: 600,
+            // 'instance' is basically the tooltip. More details in the "Object-oriented Tooltipster" section.
+            functionBefore: function (instance, helper) {
+
+                var $origin = $(helper.origin);
+
+                // we set a variable so the data is only loaded once via Ajax, not every time the tooltip opens
+                if ($origin.data('loaded') !== true) {
+                    var page_id = $origin.attr("data-wikipedia");
+                    fetchWiki(page_id, function (data) {
+
+                        // call the 'content' method to update the content of our tooltip with the returned data.
+                        // note: this content update will trigger an update animation (see the updateAnimation option)
+                        data.find("sup.reference").remove();
+                        data.find("a").attr({ href: "" }).click(function (elem) {
+                            automagic.store.setInput(elem.toElement.innerText);
+                            automagic.store.search();
+                            return false;
+                        });
+                        instance.content(data);
+
+                        // to remember that the data has been loaded
+                        $origin.data('loaded', true);
+                    });
+                }
+            }
+        });
+
+        $('div.highlight[title!=""]').tooltipster({
+            theme: 'tooltipster-shadow',
+            maxWidth: 400,
+        });
+    }
+
+
+    function fetchWiki(page_id, callback) {
+        $.ajax({
+            url: "https://en.wikipedia.org/w/api.php",
+            data: {
+                format: "json",
+                action: "parse",
+                page: page_id,
+                prop: "text",
+                section: 0,
+                origin: "*",
+            },
+            dataType: 'json',
+            headers: {
+                'Api-User-Agent': 'MyCoolTool/1.1 (http://example.com/MyCoolTool/; MyCoolTool@example.com) BasedOnSuperLib/1.4'
+            },
+            crossDomain: true,
+            success: function (data) {
+                var result = $(data.parse.text["*"]).find("p").first();
+                callback(result);
+            }
+        });
+    }
+
+
+
+    </script>
+
+    <script src="/Scripts/graph.js"></script>
+
 </body>
 </html>

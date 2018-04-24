@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Search;
+using Microsoft.Azure.Search.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -54,5 +55,19 @@ namespace DocSearch.Models
         [IsFacetable]
         [JsonProperty("entities")]
         public List<string> LinkedEntities { get; set; } = new List<string>();
+    }
+
+    public class Docs
+    {
+        public FacetResults Facets { get; set; }
+        public IList<SearchResult> Results { get; set; }
+        public int? Count { get; set; }
+    }
+
+    public class FDGraphEdges
+    {
+        public int source { get; set; }
+        public int target { get; set; }
+
     }
 }
