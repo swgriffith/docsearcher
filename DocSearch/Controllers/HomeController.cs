@@ -19,6 +19,7 @@ namespace DocSearch.Controllers
             return View();
         }
 
+
         public ActionResult Upload()
         {
             ViewBag.Title = "Upload Page";
@@ -69,11 +70,10 @@ namespace DocSearch.Controllers
         public void UploadBlob(HttpPostedFileBase file)
         {
 
-                CloudBlobContainer container = GetCloudBlobContainer();
-                CloudBlockBlob blob = container.GetBlockBlobReference(file.FileName);
-                blob.UploadFromStream(file.InputStream);
+            CloudBlobContainer container = GetCloudBlobContainer();
+            CloudBlockBlob blob = container.GetBlockBlobReference(file.FileName);
+            blob.UploadFromStream(file.InputStream);
 
         }
-
     }
 }
