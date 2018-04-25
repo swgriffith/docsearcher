@@ -1,11 +1,13 @@
 ﻿@{
-                /**/
+    /**/
 
-                Layout = null;
+    Layout = null;
 }
 <!DOCTYPE html>
 <html>
 <head>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
@@ -15,24 +17,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
           crossorigin="anonymous">
 
-    <!--link rel="stylesheet" href="https://cdn.jsdelivr.net/azsearch.js/0.0.13/AzSearch.css"-->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/azsearch.js@0.0.21/dist/AzSearch.css">
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
-
-    <!-- hocr Proofreader -->
-    <link rel="stylesheet" href="/Content/fonts.css" />
     <link rel="stylesheet" href="/Content/main.css" />
-    <link rel="stylesheet" href="/Content/tooltipster.bundle.css" />
-    <link rel="stylesheet" href="/Content/tooltipster-sideTip-light.min.css" />
-    <link rel="stylesheet" href="/Content/tooltipster-sideTip-noir.min.css" />
-    <link rel="stylesheet" href="/Content/tooltipster-sideTip-shadow.min.css" />
-    <script src="/Scripts/hocr-proofreader.js"></script>
-    <script src="/Scripts/main.js"></script>
-
-    <script src="//d3js.org/d3.v3.min.js"></script>
-    <script type="text/javascript">
-                //app insights?
-    </script>
 
 
     <title>Document Upload</title>
@@ -40,146 +25,67 @@
 
 <body>
 
-    <style>
-        div.stretchy-wrapper {
-            width: 100%;
-            position: relative;
-        }
-
-            div.stretchy-wrapper > div {
-                position: absolute;
-                top: 0;
-                bottom: 0;
-                left: 0;
-                right: 0;
-            }
-
-        .highlight {
-            opacity: 0.5;
-            filter: alpha(opacity=30);
-            background-color: yellow;
-        }
-
-        #photoInput {
-            display: none;
-            z-index: 99999999;
-        }
-
-        .fa-camera {
-            color: white;
-            position: absolute;
-            top: 4px;
-            font-size: 24px;
-        }
-
-        .list-group-item {
-            padding: 3px;
-        }
-
-        .nav-sidebar {
-            font-size: 9pt;
-        }
-    </style>
-    <!-- Modal -->
-    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-        <div class="modal-dialog" style="width: 98%; height: 95%;" role="document">
-            <div class="modal-content" style="height: 100%;">
-                <div class="modal-body" style="width: 100%; height: 100%;">
-                    <div class="toolbar">
-                        <button id="toggle-layout-image">Image/Text</button>
-                        <div class="separator"></div>
-                        <span>Zoom:</span>
-                        <button id="zoom-page-full">Full Page</button>
-                        <button id="zoom-page-width">Page Width</button>
-                        <button id="zoom-original">Original</button>
-                        <button id="download-original">Download</button>
-                        <div class="separator"></div>
-                        <button id="button-save">Save</button>
-                    </div>
-                    <div id="layout-container" class="container" style="width: 50%;"></div>
-                    <div id="editor-container" class="container" style="width: 50%;"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div id="app">
         <nav class="navbar navbar-inverse navbar-fixed-top">
             <div class="container-fluid">
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#facetPanel" aria-expanded="false"
-                            aria-controls="navbar">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <div class="row">
-                        <div>
-                            <a href="https://aka.ms/jfkfiles" style="float: left; padding: 5px;">
-                                <img src="/Content/jfk-files.png" style="max-height: 40px;">
-                            </a>
-                        </div>
-                        <div id="searchBox" class="col-mid-8 col-sm-8 col-xs-6"></div>
-                        <div class="pagelabel">
-                            <a class="navbar-brand pagelabel" href="https://aka.ms/jfkfiles" style="margin-left: 10px; padding-top: 8px; margin-right: 10px;">learn more</a>
-                            <form action="" method="post" enctype="multipart/form-data">
 
-                                <label for="file">Filename:</label>
-                                <input type="file" name="uploadedFiles" id="file" multiple />
 
-                                <input type="submit" />
-                            </form>
-                            <br />
-                            @{
-                                if (ViewBag.filesUploaded != null)
-                                {
-                                    <b>Uploaded files:</b>
-                                    foreach (string file in ViewBag.filesUploaded)
-                                    {
-                                        <li>@file</li>
-                                    }
-                                }
-                            }
+                <div class="row">
+                    <div class="col-md-2">
+                        <a href="https://aka.ms/jfkfiles" style="float: left; padding: 5px;">
+                            <img src="/Content/jfk-files.png" style="max-height: 40px;">
 
-                        </div>
-                        <div id="navbar" class="navbar-collapse collapse">
-
-                        </div>
+                        </a>
                     </div>
+                    <div class="col-md-3">
+                        <h3 style="color:white">Upload some files</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <a class="navbar-brand pagelabel" href="/Home/Index">Search</a>
+
+                    </div>
+
+
                 </div>
             </div>
         </nav>
+
         <div class="container-fluid">
             <div class="row">
+                <div class="col-md-offset-4 col-md-4">
+                    <div class="upload-form">
+                        @using (Html.BeginForm("Upload", "Home", FormMethod.Post,
+                        new { enctype = "multipart/form-data" }))
+                        {
+                            <input type="file" name="uploadedFiles" multiple>
+                            <p>Drag your files here or click in this area.</p>
+                            <button type="submit">Upload</button>
+                        }
 
-                <div id="facetPanel" class="col-sm-3 col-md-3 sidebar collapse">
-                    <ul class="nav nav-sidebar">
-                        <div className="panel panel-primary behclick-panel">
-                            <div id="entitiesFacet"></div>
-                        </div>
-                    </ul>
+                    </div>
                 </div>
-
-                <div class="col-sm-9 col-sm-offset-3 col-md-9 col-md-offset-3 results_section">
-                    <div id="fdGraph" style="display:none; border-bottom:1px solid #eee; height: 1000px; width:100%; margin-left: -20px;background: #f5f5f5; overflow: hidden; position: fixed; z-index: 1000"></div>
-                    <div id="results" class="row placeholders" style="max-width: 900px; margin-left: auto; margin-right: auto;">
-                    </div>
-                    <div id="pager" class="row">
-                    </div>
+                <div class="row">
+                    @{
+                        if (ViewBag.filesUploaded != null)
+                        {
+                            <b>Uploaded files:</b>
+                            foreach (string file in ViewBag.filesUploaded)
+                            {
+                                <li>@file</li>
+                            }
+                        }
+                    }
                 </div>
             </div>
         </div>
-        <!-- Bootstrap core JavaScript
-            ================================================== -->
-        <!-- Placed at the end of the document so the pages load faster -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
-                crossorigin="anonymous"></script>
-
-        <script src="/Scripts/tooltipster.bundle.js"></script>
     </div>
-
+    <script>
+        $(document).ready(function () {
+            $('form input').change(function () {
+                $('form p').text(this.files.length + " file(s) selected");
+            });
+        });
+    </script>
 </body>
 </html>
 
